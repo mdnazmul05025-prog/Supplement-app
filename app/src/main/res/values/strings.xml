@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Supplement</string>
+    <string name="app_tagline">Community Medicine Directory</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="sign_out">Sign out</string>
+    <string name="notification_channel_name">Community Medicine Updates</string>
+    <string name="notification_channel_desc">Alerts when new medicines or corrections are shared by the community</string>
+</resources>

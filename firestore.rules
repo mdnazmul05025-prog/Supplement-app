@@ -1,0 +1,129 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidCategory(category) {
+      return category in ['Tablet', 'Capsule', 'Syrup', 'Injection', 'Soap', 'Shampoo', 'Lotion', 'Other'];
+    }
+
+    function isValidMedicine(data) {
+      return data.brandName is string && data.brandName.size() >= 1 && data.brandName.size() <= 120 &&
+             data.normalizedBrand is string && data.normalizedBrand.size() >= 1 && data.normalizedBrand.size() <= 120 &&
+             data.genericName is string && data.genericName.size() >= 1 && data.genericName.size() <= 160 &&
+             data.companyName is string && data.companyName.size() >= 1 && data.companyName.size() <= 140 &&
+             data.category is string && isValidCategory(data.category) &&
+             data.boxPrice is number && data.boxPrice > 0 && data.boxPrice <= 1000000 &&
+             data.piecesPerBox is int && data.piecesPerBox >= 1 && data.piecesPerBox <= 10000 &&
+             data.pricePerPiece is number && data.pricePerPiece > 0 && data.pricePerPiece <= 1000000 &&
+             data.status == 'approved' &&
+             data.createdByUid is string && data.createdByUid.size() >= 1 && data.createdByUid.size() <= 128 &&
+             data.createdByName is string && data.createdByName.size() >= 1 && data.createdByName.size() <= 80 &&
+             data.lastUpdatedByUid is string && data.lastUpdatedByUid.size() >= 1 && data.lastUpdatedByUid.size() <= 128 &&
+             data.lastUpdatedByName is string && data.lastUpdatedByName.size() >= 1 && data.lastUpdatedByName.size() <= 80 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMedicineUpdate(data) {
+      return data.medicineId is string && isValidId(data.medicineId) &&
+             data.brandName is string && data.brandName.size() >= 1 && data.brandName.size() <= 120 &&
+             data.genericName is string && data.genericName.size() >= 1 && data.genericName.size() <= 160 &&
+             data.companyName is string && data.companyName.size() >= 1 && data.companyName.size() <= 140 &&
+             data.category is string && isValidCategory(data.category) &&
+             data.boxPrice is number && data.boxPrice > 0 && data.boxPrice <= 1000000 &&
+             data.piecesPerBox is int && data.piecesPerBox >= 1 && data.piecesPerBox <= 10000 &&
+             data.pricePerPiece is number && data.pricePerPiece > 0 && data.pricePerPiece <= 1000000 &&
+             data.actionType in ['CREATE', 'UPDATE'] &&
+             data.changeSummary is string && data.changeSummary.size() <= 300 &&
+             data.status == 'approved' &&
+             data.contributorUid is string && data.contributorUid.size() >= 1 && data.contributorUid.size() <= 128 &&
+             data.contributorName is string && data.contributorName.size() >= 1 && data.contributorName.size() <= 80 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /medicines/{medicineId} {
+      allow get: if isSignedIn() && isValidId(medicineId) && resource.data.status == 'approved';
+      allow list: if isSignedIn() && resource.data.status == 'approved';
+
+      allow create: if isSignedIn() &&
+                       isValidId(medicineId) &&
+                       incoming().keys().hasAll([
+                         'brandName', 'normalizedBrand', 'genericName', 'companyName',
+                         'category', 'boxPrice', 'piecesPerBox', 'pricePerPiece',
+                         'status', 'createdByUid', 'createdByName',
+                         'lastUpdatedByUid', 'lastUpdatedByName', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'brandName', 'normalizedBrand', 'genericName', 'companyName',
+                         'category', 'boxPrice', 'piecesPerBox', 'pricePerPiece',
+                         'status', 'createdByUid', 'createdByName',
+                         'lastUpdatedByUid', 'lastUpdatedByName', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().createdByUid == request.auth.uid &&
+                       incoming().lastUpdatedByUid == request.auth.uid &&
+                       isValidMedicine(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(medicineId) &&
+                       isValidMedicine(incoming()) &&
+                       incoming().createdByUid == existing().createdByUid &&
+                       incoming().createdByName == existing().createdByName &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().brandName == existing().brandName &&
+                       incoming().normalizedBrand == existing().normalizedBrand &&
+                       incoming().status == existing().status &&
+                       incoming().lastUpdatedByUid == request.auth.uid &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'genericName', 'companyName', 'category',
+                         'boxPrice', 'piecesPerBox', 'pricePerPiece',
+                         'lastUpdatedByUid', 'lastUpdatedByName', 'updatedAt'
+                       ]);
+
+      allow delete: if false;
+    }
+
+    match /medicine_updates/{updateId} {
+      allow get: if isSignedIn() && isValidId(updateId) && resource.data.status == 'approved';
+      allow list: if isSignedIn() && resource.data.status == 'approved';
+
+      allow create: if isSignedIn() &&
+                       isValidId(updateId) &&
+                       incoming().keys().hasAll([
+                         'medicineId', 'brandName', 'genericName', 'companyName',
+                         'category', 'boxPrice', 'piecesPerBox', 'pricePerPiece',
+                         'actionType', 'changeSummary', 'status',
+                         'contributorUid', 'contributorName', 'createdAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'medicineId', 'brandName', 'genericName', 'companyName',
+                         'category', 'boxPrice', 'piecesPerBox', 'pricePerPiece',
+                         'actionType', 'changeSummary', 'status',
+                         'contributorUid', 'contributorName', 'createdAt'
+                       ]) &&
+                       incoming().contributorUid == request.auth.uid &&
+                       isValidMedicineUpdate(incoming()) &&
+                       existsAfter(/databases/$(database)/documents/medicines/$(incoming().medicineId));
+
+      allow update, delete: if false;
+    }
+  }
+}

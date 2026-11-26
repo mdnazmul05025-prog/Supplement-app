@@ -1,0 +1,189 @@
+{
+  "entities": {
+    "Medicine": {
+      "title": "Medicine",
+      "description": "Shared community medicine record with automatic per-piece pricing and normalized brand uniqueness.",
+      "type": "object",
+      "properties": {
+        "brandName": {
+          "type": "string",
+          "description": "Display brand name of the medicine."
+        },
+        "normalizedBrand": {
+          "type": "string",
+          "description": "Trimmed, collapsed-whitespace lowercase brand name used for duplicate prevention."
+        },
+        "genericName": {
+          "type": "string",
+          "description": "Active generic compound name."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "Manufacturer or pharmaceutical company name."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Tablet", "Capsule", "Syrup", "Injection", "Soap", "Shampoo", "Lotion", "Other"],
+          "description": "Medicine dosage/product category."
+        },
+        "boxPrice": {
+          "type": "number",
+          "description": "Total box price in BDT."
+        },
+        "piecesPerBox": {
+          "type": "integer",
+          "description": "Number of pieces per box."
+        },
+        "pricePerPiece": {
+          "type": "number",
+          "description": "Calculated price per piece (boxPrice / piecesPerBox) in BDT."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["approved"],
+          "description": "Visibility status of the community medicine record."
+        },
+        "createdByUid": {
+          "type": "string",
+          "description": "Firebase UID of the original contributor."
+        },
+        "createdByName": {
+          "type": "string",
+          "description": "Display name of the original contributor."
+        },
+        "lastUpdatedByUid": {
+          "type": "string",
+          "description": "Firebase UID of the latest contributor who added or updated the record."
+        },
+        "lastUpdatedByName": {
+          "type": "string",
+          "description": "Display name of the latest contributor."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) when medicine was added."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) when medicine was last updated."
+        }
+      },
+      "required": [
+        "brandName",
+        "normalizedBrand",
+        "genericName",
+        "companyName",
+        "category",
+        "boxPrice",
+        "piecesPerBox",
+        "pricePerPiece",
+        "status",
+        "createdByUid",
+        "createdByName",
+        "lastUpdatedByUid",
+        "lastUpdatedByName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MedicineUpdate": {
+      "title": "MedicineUpdate",
+      "description": "Immutable community submission and correction history entry linked to a medicine record.",
+      "type": "object",
+      "properties": {
+        "medicineId": {
+          "type": "string",
+          "description": "Target medicine document ID."
+        },
+        "brandName": {
+          "type": "string",
+          "description": "Brand name at time of submission."
+        },
+        "genericName": {
+          "type": "string",
+          "description": "Generic name at time of submission."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "Company name at time of submission."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Tablet", "Capsule", "Syrup", "Injection", "Soap", "Shampoo", "Lotion", "Other"],
+          "description": "Medicine category at time of submission."
+        },
+        "boxPrice": {
+          "type": "number",
+          "description": "Submitted box price in BDT."
+        },
+        "piecesPerBox": {
+          "type": "integer",
+          "description": "Submitted pieces per box."
+        },
+        "pricePerPiece": {
+          "type": "number",
+          "description": "Calculated price per piece in BDT."
+        },
+        "actionType": {
+          "type": "string",
+          "enum": ["CREATE", "UPDATE"],
+          "description": "Whether this entry added a new medicine or corrected an existing one."
+        },
+        "changeSummary": {
+          "type": "string",
+          "description": "Optional summary note of the submission or correction."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["approved"],
+          "description": "Visibility status of the community update."
+        },
+        "contributorUid": {
+          "type": "string",
+          "description": "Firebase UID of the contributor."
+        },
+        "contributorName": {
+          "type": "string",
+          "description": "Display name of the contributor."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) of the submission."
+        }
+      },
+      "required": [
+        "medicineId",
+        "brandName",
+        "genericName",
+        "companyName",
+        "category",
+        "boxPrice",
+        "piecesPerBox",
+        "pricePerPiece",
+        "actionType",
+        "changeSummary",
+        "status",
+        "contributorUid",
+        "contributorName",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/medicines/{medicineId}": {
+      "schema": {
+        "$ref": "#/entities/Medicine"
+      },
+      "description": "Shared community medicine directory keyed deterministically by normalized brand name."
+    },
+    "/medicine_updates/{updateId}": {
+      "schema": {
+        "$ref": "#/entities/MedicineUpdate"
+      },
+      "description": "Append-only community medicine submission and correction feed."
+    }
+  }
+}

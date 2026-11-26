@@ -1,0 +1,6 @@
+{
+  "name": "Supplement",
+  "description": "Community-powered medicine information and real-time update directory with automatic per-piece pricing and duplicate prevention.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

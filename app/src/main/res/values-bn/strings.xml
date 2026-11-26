@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">সাপ্লিমেন্ট</string>
+    <string name="app_tagline">কমিউনিটি ওষুধ তথ্যভাণ্ডার</string>
+    <string name="sign_in_google">গুগল দিয়ে সাইন ইন করুন</string>
+    <string name="sign_out">সাইন আউট</string>
+    <string name="notification_channel_name">কমিউনিটি ওষুধ আপডেট</string>
+    <string name="notification_channel_desc">কমিউনিটি নতুন ওষুধ বা সংশোধন যোগ করলে বিজ্ঞপ্তি পান</string>
+</resources>
